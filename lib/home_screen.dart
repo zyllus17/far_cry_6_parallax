@@ -1,5 +1,5 @@
 import 'package:far_cry_6_parallax/model.dart';
-import 'package:far_cry_6_parallax/paralax.dart';
+import 'package:far_cry_6_parallax/parallax.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
