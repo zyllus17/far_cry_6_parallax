@@ -1,12 +1,11 @@
-import 'dart:math' as math;
-import 'dart:ui' as ui;
-
 import 'package:far_cry_6_parallax/model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 class ParallaxWidget extends StatefulWidget {
-  final List parallaxData;
+  final List<Parallax> parallaxData;
 
   const ParallaxWidget({
     Key? key,
@@ -28,31 +27,35 @@ class _ParallaxWidgetState extends State<ParallaxWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notif) {
-        setState(() {
-          _pixel = notif.metrics.pixels;
-        });
-        return true;
-      },
-      child: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
-        slivers: [
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return ParallaxBody(
-                  index: index,
-                  pixel: _pixel,
-                  parallaxLength: widget.parallaxData.length,
-                  data: widget.parallaxData[index],
-                );
-              },
-              childCount: widget.parallaxData.length,
-            ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return NotificationListener<ScrollNotification>(
+          onNotification: (notif) {
+            setState(() {
+              _pixel = notif.metrics.pixels;
+            });
+            return true;
+          },
+          child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
+            slivers: [
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return ParallaxBody(
+                      index: index,
+                      pixel: _pixel,
+                      parallaxLength: widget.parallaxData.length,
+                      data: widget.parallaxData[index],
+                    );
+                  },
+                  childCount: widget.parallaxData.length,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -73,11 +76,14 @@ class ParallaxBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double availableHeight = MediaQuery.of(context).size.height;
+    final double availableWidth = MediaQuery.of(context).size.width;
+
     return ClipPath(
       clipper: TornEffect(intensity: 21),
       child: SizedBox(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
+        height: availableHeight,
+        width: availableWidth,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -92,21 +98,36 @@ class ParallaxBody extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            Positioned(
-              bottom: 200,
-              left: 10,
-              child: Container(
-                color: const Color(0xffF3B21A),
-                child: Text(
-                  data.title,
-                  style: GoogleFonts.secularOne(
-                    color: Colors.black,
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
+            if (data.title.isNotEmpty)
+              Positioned(
+                bottom: 200,
+                left: 10,
+                right: 10,
+                child: Container(
+                  color: const Color(0xffF3B21A),
+                  padding: const EdgeInsets.all(10.0),
+                  child: SizedBox(
+                    width: availableWidth - 20.0, // Adjust the width as needed
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        children: [
+                          Text(
+                            data.title,
+                            style: GoogleFonts.secularOne(
+                              color: Colors.black,
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
             Positioned(
               bottom: 95,
               right: 20,
@@ -159,22 +180,22 @@ class TornEffect extends CustomClipper<Path> {
       bool curve = random.nextBool();
       if (curve) {
         double cpx =
-            topProgress + random.nextInt(intensity) * 0.5 * negativePositive();
+            topProgress + random.nextInt(intensity) * 0.5 * _negativePositive();
         double cpy =
-            ybase + (random.nextInt(intensity) * 0.25 * negativePositive());
+            ybase + (random.nextInt(intensity) * 0.25 * _negativePositive());
 
         double x =
-            topProgress + random.nextInt(intensity) * 1.0 * negativePositive();
+            topProgress + random.nextInt(intensity) * 1.0 * _negativePositive();
         double y =
-            ybase + (random.nextInt(intensity) * 0.5 * negativePositive());
+            ybase + (random.nextInt(intensity) * 0.5 * _negativePositive());
 
         path.quadraticBezierTo(cpx, cpy, x, y);
         topProgress += x.abs();
       } else {
         double x =
-            topProgress + random.nextInt(intensity) * 1.0 * negativePositive();
+            topProgress + random.nextInt(intensity) * 1.0 * _negativePositive();
         double y =
-            ybase + (random.nextInt(intensity) * 0.5 * negativePositive());
+            ybase + (random.nextInt(intensity) * 0.5 * _negativePositive());
         path.lineTo(x, y);
         topProgress += x.abs();
       }
@@ -197,11 +218,9 @@ class TornEffect extends CustomClipper<Path> {
     return path;
   }
 
-  double negativePositive() {
+  double _negativePositive() {
     var random = math.Random();
-    bool negativePositive = random.nextBool();
-    double result = negativePositive ? 1.0 : -1.0;
-    return result;
+    return random.nextBool() ? 1.0 : -1.0;
   }
 
   @override
